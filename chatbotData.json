@@ -1,0 +1,58 @@
+{
+  "senin": {
+    "sejarah": [],
+    "sosiologi": [
+      "uh 1"
+    ],
+    "kimia": [],
+    "b.indo": [],
+    "tambahan": [],
+    "edit": [
+      "2023-08-13"
+    ]
+  },
+  "selasa": {
+    "biologi": [],
+    "informatika": [],
+    "geografi": [
+      "hahhaha"
+    ],
+    "pjok": [],
+    "tambahan": [],
+    "edit": [
+      "2023-08-13"
+    ]
+  },
+  "rabu": {
+    "bam": [],
+    "pai": [],
+    "senbud": [],
+    "b.indo": [],
+    "mtk": [],
+    "tambahan": [],
+    "edit": []
+  },
+  "kamis": {
+    "bk": [],
+    "b.ingris": [],
+    "fisika": [],
+    "paq": [],
+    "tambahan": [],
+    "edit": []
+  },
+  "jumat": {
+    "ekonomi": [],
+    "ppkn": [],
+    "mtk": [],
+    "tambahan": [],
+    "edit": []
+  },
+  "sabtu": {
+    "tambahan": [],
+    "edit": []
+  },
+  "minggu": {
+    "tambahan": [],
+    "edit": []
+  }
+}

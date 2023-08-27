@@ -1,5 +1,5 @@
 module.exports =[`
-WELCOME Vero AI bot BY v3.0
+WELCOME Vero AI bot v3.0
 
 Vero adalah sebuah chatbot ai yang dapat menjadi asistant anda.untuk melihat info catatan singkat tentang vero bot,silahkan ketik /note
 
@@ -26,13 +26,16 @@ untuk info lebih lengkap tentang fitur tugas silahkan ketik :/note fitur tugas
 /quote random
 /jodoh <nama> dan <nama>
 /prediksi usia <nama>
+/meme
+/tebak nama
 
 *== Fitur keren ==*
 /jadwal shalat hari ini
 /google <masukkan hal yg ingin di googling>
 /waktu di negara <kota,nama Negara>
 /ai <tanyakan apapun>
-/img <gambar yg ingin dibuat>`
+/img <gambar yg ingin dibuat>
+/youtube mp3 (idVideoYt)`
 
 
 

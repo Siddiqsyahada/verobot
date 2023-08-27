@@ -8,6 +8,7 @@ const {
   prepareWAMessageMedia,
   areJidsSameUser,
   getContentType,
+  MessageType,
 } = require("@adiwajshing/baileys");
 const fs = require("fs");
 const util = require("util");
@@ -36,27 +37,41 @@ const {
   tampilkanTugasHari,
   tampilkanTugasSemuaHari,
   cekBatasHariTugas,
+  handleGuess
 } = require("./tugasHandler");
+const { umurSaatIni } = require("./function");
+const { sansekai2 } = require("./sansekai-2");
 const { header } = require("request/lib/hawk");
-
-function umurSaatIni(tanggalLahir, nama) {
-  const currentDate = new Date();
-  const birthDate = new Date(tanggalLahir);
-  const umur = currentDate - birthDate;
-  const years = Math.floor(umur / (1000 * 60 * 60 * 24 * 365));
-  const months = Math.floor(umur / (1000 * 60 * 60 * 24 * 30));
-  const days = Math.floor(umur / (1000 * 60 * 60 * 24));
-  const hours = Math.floor(umur / (1000 * 60 * 60));
-  const minutes = Math.floor(umur / (1000 * 60));
-  const seconds = Math.floor(umur / 1000);
-
-  const ambilTanggalLahir = tanggalLahir.split(" ").join(" ");
-  m.reply(
-    `Berikut adalah rincian umur ${nama} saat ini:\nTanggal Lahir: ${ambilTanggalLahir}\nTahun: ${years}\nBulan: ${months}\nHari: ${days}\nJam: ${hours}\nMenit: ${minutes}\nDetik: ${seconds}\n\nJadi umur ${nama} sekarang adalah ${years} tahun.`
-  );
-}
+const { Socket } = require("dgram");
 
 currentDate = new Date();
+
+let hintTebakNama;
+const SiswaE3 = ["siddiq", "mona", "icha", "anna", "adam"];
+let hintTebakHewan;
+const animals = [
+  "kucing",
+  "anjing",
+  "singa",
+  "gajah",
+  "babi",
+  "ular",
+  "ayam",
+  "bebek",
+  "monyet",
+  "burung",
+  "chetah",
+  "harimau",
+  "serigala",
+  "kalajengking",
+  "semut",
+  "elang",
+  "koala",
+  "ikan",
+  "jerapah",
+  "orangutan",
+  "gorila",
+];
 
 const memeImages = [
   "./DataMeme/meme (1).jpg",
@@ -301,13 +316,13 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
     var prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : "/";
     const isCmd2 = body.startsWith(prefix);
     const command = body.replace(prefix, "").trim().toLowerCase();
+    const idYoutubeMp3 = body.replace(prefix, "").trim();
     const args = body.replace(prefix, "").trim();
     const pushname = m.pushName || "No Name";
     const botNumber = await client.decodeJid(client.user.id);
     const itsMe = m.sender == botNumber ? true : false;
     let text = (q = Array.isArray(args) ? args.join(" ") : "");
-    const arg = args;
-    // const arg1 = arg.trim().substring(arg.indexOf(" ") + 1);
+    const commandArray = command.split(" ");
 
     const from = m.chat;
     const reply = m.reply;
@@ -323,6 +338,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
       ? await client.groupMetadata(m.chat).catch((e) => {})
       : "";
     const groupName = m.isGroup ? groupMetadata.subject : "";
+    const groupId = m.isGroup ? groupMetadata.id : "";
 
     // Push Message To Console
     let argsLog = budy.length > 30 ? `${q.substring(0, 30)}...` : budy;
@@ -349,7 +365,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
     }
 
     // command untuk google search
-    if (command.includes("google")) {
+    if (isCmd2 && command.includes("google")) {
       const puppeteer = require("puppeteer");
       async function searchOnGoogle(searchKeyword) {
         const browser = await puppeteer.launch();
@@ -382,7 +398,41 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
       }
 
       searchOnGoogle(command);
-    } else if (command.includes("jadwal shalat")) {
+    } else if (isCmd2 && command.includes("tagall")) {
+      if (isCmd2 && command.includes("tagall")) {
+        const tagAllInGroup = async (m, groupIdd, message) => {
+          try {
+            const groupInfo = await m.groupMetadata(groupIdd);
+            if (groupInfo && groupInfo.participants) {
+              const mentionedJids = [];
+              for (const participant of groupInfo.participants) {
+                mentionedJids.push(participant.jid);
+              }
+              console.log(mentionedJids);
+
+              const mentionedText = mentionedJids
+                .filter((jid) => jid !== m.user.jid) // Hindari memasukkan bot ke dalam tag
+                .join(" @s.whatsapp.net "); // Menambahkan spasi sebelum @s.whatsapp.net
+
+              const taggedMessage = `@${mentionedText}\n${message}`;
+              await m.sendText(groupIdd, taggedMessage);
+            } else {
+              await m.sendText(
+                groupIdd,
+                "Tidak dapat mengambil informasi anggota grup."
+              );
+            }
+          } catch (error) {
+            console.error(error);
+            await m.sendText(
+              groupIdd,
+              "Terjadi kesalahan saat mencoba melakukan tagging."
+            );
+          }
+        };
+        tagAllInGroup(client, m.chat, "Semua orang di grup, tag!");
+      }
+    } else if (isCmd2 && command.includes("jadwal shalat")) {
       const commandArray = command.split(" ");
       const kota = commandArray.slice(2).join(" ");
       const isHariIni = commandArray.slice(2).join(" ");
@@ -412,7 +462,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
           );
         }
       );
-    } else if (command.includes("tambahan tugas")) {
+    } else if (isCmd2 && command.includes("tambahan tugas")) {
       const dataArray = command.split(" ");
       const hariTugas = dataArray[2];
       const tugasnya = dataArray.slice(3).join(" ");
@@ -462,62 +512,90 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
           }
         });
       }
-    } else if (command.includes("add tugas")) {
+    } else if (isCmd2 && command.includes("add tugas")) {
       tambahkanTugas(command, m);
-    } else if (command.includes("remove tugas hari")) {
+    } else if (isCmd2 && command.includes("remove tugas hari")) {
       removeTugasHari(command, m.sender.replace("@s.whatsapp.net", ""));
-    } else if (command.includes("remove tugas mapel")) {
+    } else if (isCmd2 && command.includes("remove tugas mapel")) {
       removeTugasMapel(command, m.sender.replace("@s.whatsapp.net", ""));
-    } else if (command.includes("tugas hari")) {
+    } else if (isCmd2 && command.includes("tugas hari")) {
       tampilkanTugasHari(command, m);
-    } else if (command.includes("semua tugas")) {
+    } else if (isCmd2 && command.includes("semua tugas")) {
       tampilkanTugasSemuaHari(command, m);
     }
     // command calculator jodoh
-    else if (command.includes("jodoh")) {
+    else if (isCmd2 && command.includes("jodoh")) {
+      const axios = require("axios");
       const nama = command.split(" ");
 
       const options = {
         method: "GET",
-        url: "https://love-calculator.p.rapidapi.com/getPercentage",
+        url: "https://the-love-calculator.p.rapidapi.com/love-calculator",
         params: {
-          sname: nama[1],
-          fname: nama[3],
+          fname: nama[1],
+          sname: nama[3],
         },
         headers: {
           "X-RapidAPI-Key":
             "3821ab94c3msh76f6c39cfce22fep19a688jsn3c8bd46426c9",
-          "X-RapidAPI-Host": "love-calculator.p.rapidapi.com",
+          "X-RapidAPI-Host": "the-love-calculator.p.rapidapi.com",
         },
       };
 
       try {
         const response = await axios.request(options);
-        console.log(response.data);
-        const percentage = parseInt(response.data.percentage);
-        console.log(percentage);
-        let hasilKeserasian = "";
-        if (percentage >= 90) {
-          hasilKeserasian = "waww kalian berdua adalah pasangan yg cocok❤️";
-        } else if (percentage >= 50 && percentage <= 90) {
-          hasilKeserasian =
-            "Nilai yg cukup bagus,jangan lupa menerima kelebihan dan kekurangan satu sama lain ya";
-        } else if (percentage <= 50) {
-          hasilKeserasian =
-            "mungkin kalian berdua butuh mencari yang lebih baik,semangat🤗";
+        const persentaseCinta = response.data["percentage match: "];
+
+        if (persentaseCinta >= 1 && persentaseCinta <= 10) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Tidak cocok, mungkin lebih baik sebagai teman.`
+          );
+        } else if (persentaseCinta > 10 && persentaseCinta <= 20) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Ada potensi, tetapi masih perlu waktu untuk mengenal lebih jauh.`
+          );
+        } else if (persentaseCinta > 20 && persentaseCinta <= 30) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Mulai terlihat cinta yang manis, tetapi masih perlu usaha lebih.`
+          );
+        } else if (persentaseCinta > 30 && persentaseCinta <= 40) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Kemungkinan besar akan menjadi pasangan yang baik.`
+          );
+        } else if (persentaseCinta > 40 && persentaseCinta <= 50) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Cinta ini semakin dalam dan nyata.`
+          );
+        } else if (persentaseCinta > 50 && persentaseCinta <= 60) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Kamu adalah pasangan yang cocok, cinta ini kuat.`
+          );
+        } else if (persentaseCinta > 60 && persentaseCinta <= 70) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Kalian adalah sepasang kekasih yang serasi dan mesra.`
+          );
+        } else if (persentaseCinta > 70 && persentaseCinta <= 80) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Kamu dan pasanganmu adalah cinta sejati, harmoni terpancar.`
+          );
+        } else if (persentaseCinta > 80 && persentaseCinta <= 90) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Cinta ini tak tergantikan, kalian adalah pasangan impian.`
+          );
+        } else if (persentaseCinta > 90 && persentaseCinta <= 100) {
+          m.reply(
+            `Keserasian antara ${nama[1]} dan ${nama[3]} adalah ${persentaseCinta}%: Cinta ini sempurna, kalian adalah pasangan tak terpisahkan.`
+          );
         } else {
-          console.log(error);
+          m.reply("Persentase cinta tidak valid.");
         }
-        m.reply(
-          `keserasian antara jodoh ${response.data.sname} dan ${response.data.fname} adalah ${response.data.percentage}%.${hasilKeserasian}`
-        );
       } catch (error) {
         console.error(error);
       }
     }
 
     // command untuk zodiak
-    else if (command.includes("zodiak")) {
+    else if (isCmd2 && command.includes("zodiak")) {
       const commandArray = command.split(" ");
       const zodiak1 = commandArray[1];
       const zodiak2 = commandArray[3];
@@ -554,7 +632,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
       }
     }
     //command untuk download mp3 youtube
-    else if (command.includes("youtube") && command.includes("mp3")) {
+    else if (isCmd2 && command.includes("youtube") && command.includes("mp3")) {
       function extractIdFromText(text) {
         const regex = /\((.*?)\)/;
         const match = text.match(regex);
@@ -566,30 +644,33 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
           return null;
         }
       }
-      const idYoutube = extractIdFromText(command);
+      const idYoutube = extractIdFromText(idYoutubeMp3)
+      console.log(idYoutube)
 
       const options = {
         method: "GET",
         url: "https://youtube-mp3-download1.p.rapidapi.com/dl",
-        params: { id: idYoutube, return: 1 },
+        params: { id: idYoutube },
         headers: {
           "X-RapidAPI-Key":
             "3821ab94c3msh76f6c39cfce22fep19a688jsn3c8bd46426c9",
           "X-RapidAPI-Host": "youtube-mp3-download1.p.rapidapi.com",
         },
       };
-
+      m.reply("Vero sedang Memproses,tunggu sebentar....")
       try {
         const response = await axios.request(options);
-        m.reply(
-          `Berikut adalah link untuk video dengan id ${idYoutube} : ${response.data.link}`
-        );
+        setTimeout(() => {m.reply(`Berikut adalah link mp3 untuk video Youtube\n~id : ${idYoutube}\n~judul : ${response.data.title}\n~link : ${response.data.link}`);}, 2000);
       } catch (error) {
         console.error(error);
       }
     }
     // command quote random
-    else if (command.includes("quote") && command.includes("random")) {
+    else if (
+      isCmd2 &&
+      command.includes("quote") &&
+      command.includes("random")
+    ) {
       axios
         .get(`https://www.jcquotes.com/api/quotes/random`)
         .then((response) => {
@@ -620,7 +701,11 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
         });
     }
     // command prediksi usia
-    else if (command.includes("prediksi") && command.includes("usia")) {
+    else if (
+      isCmd2 &&
+      command.includes("prediksi") &&
+      command.includes("usia")
+    ) {
       const name = command.split(" ");
       axios.get(`https://api.agify.io?name=${name[2]}`).then((response) => {
         m.reply(
@@ -629,7 +714,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
       });
     }
     // command untuk cuaca
-    else if (command.includes("cuaca")) {
+    else if (isCmd2 && command.includes("cuaca")) {
       const params = {
         access_key: "15cf0a5a760b81c7401c78a4eba2781f",
         query: "Padang",
@@ -646,7 +731,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
         .catch((error) => {
           console.log(error);
         });
-    } else if (command.includes("jokes random")) {
+    } else if (isCmd2 && command.includes("jokes random")) {
       function leluconRandom() {
         return Math.floor(Math.random() * lelucon.length) + 1;
       }
@@ -656,31 +741,40 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
       } else {
         m.reply("error");
       }
+    } else if (isCmd2 && command === "tebak nama"){
+      const randomSiswaE3 = SiswaE3[Math.floor(Math.random() * SiswaE3.length)];
+      let jenisKelamin = ''
+      if (randomSiswaE3 === "siddiq" || randomSiswaE3 === "adam"){
+        jenisKelamin = "(laki-laki)"
+      }else{
+        jenisKelamin = "(perempuan)"
+      }
+      hintTebakNama = randomSiswaE3.replace(/[a-z]/gi, "_ ") + jenisKelamin; 
+      store.chatTebakSiswaE3 = {
+        randomNamaSiswaE3: randomSiswaE3,
+        hint: hintTebakNama,
+        attempts: 5,
+      };
+      m.reply(
+        `Selamat Datang Dalam Game Tebak Nama!\nPetunjuk: ${hintTebakNama}\n\n#Berikut adalah daftar list nama yang dapat anda tebak:\n${SiswaE3}`
+      );
+    } 
+    else if (SiswaE3.some((name) => command.includes(name))) {
+      handleGuess("nama", command, store);
+    } else if (isCmd2 && command === "tebak hewan") {
+      const randomHewan = animals[Math.floor(Math.random() * animals.length)];
+      hintTebakHewan = randomHewan.replace(/[a-z]/gi, "_ "); // Inisialisasi variabel hint di sini
+      store.chatTebakHewan = {
+        randomNamaHewan: randomHewan,
+        hint: hintTebakHewan,
+        attempts: 5,
+      };
+      m.reply(
+        `Selamat Datang Dalam Game Tebak Hewan!\n~Silahkan tebak salah satu hewan dari list dengan contoh command /kucing.\n~Dalam game ini kamu hanya memiliki 5 kesempatan untuk menebak.\n~selamat bermain dan semoga tebakan anda benar!!\n\n#Berikut adalah daftar list hewan yang dapat anda tebak:\n${randomHewan};\nPetunjuk: ${hintTebakHewan}`
+      );
+    } else if (animals.some((name) => command.includes(name))) {
+      handleGuess("hewan", command, store);
     } else if (isCmd2) {
-      let hint;
-      const animals = [
-        "kucing",
-        "anjing",
-        "singa",
-        "gajah",
-        "babi",
-        "ular",
-        "ayam",
-        "bebek",
-        "monyet",
-        "burung",
-        "chetah",
-        "harimau",
-        "serigala",
-        "kalajengking",
-        "semut",
-        "elang",
-        "koala",
-        "ikan",
-        "jerapah",
-        "orangutan",
-        "gorila",
-      ];
       switch (command) {
         case "help":
         case "menu":
@@ -724,7 +818,7 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
           break;
         case "refresh":
           cekBatasHariTugas();
-        break;
+          break;
         case "siapakah pembuat chatbot ini?":
         case "pembuat chatbot":
         case "nama pembuat chatbot":
@@ -787,20 +881,12 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
         case "jam sekarang":
           m.reply(`Waktu sekarang adalah : ${currentDate}`);
           break;
-        case "siapa orang yang paling ganteng? ":
-        case "orang ganteng":
-        case "siapa yang paling ganteng di kelas 9.4?":
-        case "siapa yang ganteng?":
-          m.reply(
-            "Dilansir dari 'Halim-AtrilasCompany.com' orang yang paling ganteng dikelas 9.4 adalah siddiq insan syahada dan setelahnya diikuti oleh halim yang sama-sama dari kelas 9.4,ketampanan mereka berdua konon dapat membuat wanita bahkan pria pun ikut terpana😘"
-          );
-          break;
         case "siapakah kamu?":
         case "kamu siapa":
         case "kamu itu apa?":
         case "darimana kamu berasal?":
           m.reply(
-            "Saya adalah sebuah model ai yang terintegrasi menggunakan sebuah API dari open.AI.saya dirancang dan telah dilatih sedemikian rupa untuk menjawab pertanyaan apapun menggunakan bahasa manusia.saya diciptakan oleh seorang ahli komputer jenius bernama Siddiq Insan Syahada.siddiq telah menciptakan saya sebagai sebuah program komputer dan semua yang anda tanyakan bukanlah dijawab manusia melainkan oleh program komputer atau kecerdasan buatan"
+            "Saya adalah sebuah model ai yang terintegrasi menggunakan sebuah API dari open.AI.saya dirancang dan telah dilatih sedemikian rupa untuk menjawab pertanyaan apapun menggunakan bahasa manusia.saya diciptakan oleh seorang bernama Siddiq Insan Syahada.siddiq telah menciptakan saya sebagai sebuah program komputer dan semua yang anda tanyakan bukanlah dijawab manusia melainkan oleh program komputer atau kecerdasan buatan"
           );
           break;
         case "fuck you":
@@ -862,55 +948,6 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
                 "."
             );
           }
-          break;
-        case "siapakah yudha?":
-        case "yudha itu siapa?":
-        case "apakah kamu mengenal yudha?":
-        case "yudha":
-          m.reply(
-            "Yudha Pratama atau biasa dipanggil yudha adalah seorang siswa dari kelas 9.3,ia merupakan teman dekat atau sahabat dari siddiq.ia lahir pada tanggal 18 bulan juli tahun 2007.yudha merupakan seorang yang memiliki kehokian tinggi dan mata super.terbukti ia selalu menemukan uang di jalan,bukan hanya sekali-dua kali,tapi sangatlah sering,ia bahkan pernah menemukan uang di dasar kolam renang,bagaimana bisa?.selain itu, ia pernah mendapatkan uang 50k dijalan,siddiq pun terheran-heran kenapa dia bisa sering dapat menemukan uang di jalan.mungkin yudha adalah seseorang yang peduli akan uang,ia selalu menabung,akan tetapi uang yang di kumpulakn tersebut selalu habis ia belanjakan.yudha adalah anakn yang suka work out,tekadang ia pergi jogging bersama teman dekatnya yaitu siddiq"
-          );
-          break;
-        case "siapakah halim?":
-        case "halim itu siapa?":
-        case "halim teman siddiq":
-        case "halim":
-          m.reply(
-            "Abdul Halim Indrati namanya,ia adalah seorang siswa yang merupakn teman baik dari siddiq,ia berminat menjadi seorang programer tetapi sekarang ia ragu akan pilihan tersebut.ia juga adalah orang yang pintar dan juga rajin,terbukti ia selalu datang awal saat latihan pertunjukan kelas,tetapi sayangnya pertunjukan tersebut batal diikuti dan diganti dengan pertunjukan lain.mohon bersabar ya halim😁"
-          );
-          break;
-        case "siapakah amora?":
-        case "amora itu siapa?":
-        case "apakah kamu mengenal amora?":
-        case "amora":
-          m.reply(
-            "amora adalah seorang siswa 9.4 yang memiliki nama lengkap Amora Cleo Oktriza.ia lahir di padang tanggal 3 oktober 2008.hmm menarik,apakah oktriza diambil karena dia lahir di bulan oktober?hmm ntahlah hanya samsul yang tau.ia juga merupakan teman siddiq yang memprogram saya"
-          );
-          break;
-        case "siapakah asyrof?":
-        case "asyrof itu siapa?":
-        case "asyrof teman siddiq":
-        case "asyrof":
-          m.reply(
-            "nama lengkapnya muhammad asyrof,ia adalah teman baik dari siddiq selaku pencipta saya,ia merupakan orang yang usil pada semua orang.selain itu dia mempunyai julukan 'Datuak Pulau Karam' yang diberikan oleh halim.bukan tanpa sebab,karna asyrof merupakan orang yang bijak"
-          );
-          break;
-        case "siapakah onzel?":
-        case "siapakah onzelle?":
-        case "siapakah onzell":
-        case "omzelle":
-          m.reply(
-            "nama lengkapnya onzelle iftihal arfa,ia adalah teman dari siddiq dan merupakan anak dari seorang guru bk di smpn 4 padang yaitu Pak Ardiman.ia merupakan orang yang pandai dan pintar dalam hal seni terutama dalam bidang tari dan melukis.terkadang onzelle sering izin kepada wali kelas untuk mengkuti kegiatan dan lomba menari"
-          );
-          break;
-        case "siapakah zaqky?":
-        case "zaqky itu siapa?":
-        case "zaqky":
-        case "apakah kamu mengenal zaqky?":
-        case "apakah zaqky ganteng?":
-          m.reply(
-            "saya tidak mengenal yang namanya zaqky,tetapi dari info yang saya dapatkan,zaqky adalah seorang yang tidak mempercayai AI seperti saya.zaqky memiliki nama lengkap zaqky putra kurniawan,ia adalah teman siddiq.menurut info yang saya dapatkan,zaqky adalah laki-laki yang sedikit slayy 💅💅.setelah sedikit meriset dan mecari tahu saya mendapatkan info emailnya: libraoktober2008@gmail.com .sebagai sebuah AI, emailny bisa saja saya hack untuk mendapatkan info dan data pribadi,tetapi tidak saya lakukan karena siddiq mengajarkan agar tidak boleh jahat dan merusak privasi seseorang.demikianlah sedikit info mengenai zaqky"
-          );
           break;
         case "siapakah amanda?":
         case "siapakah atilla?":
@@ -1004,131 +1041,6 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
           } else {
             m.reply("error");
           }
-          break;
-        case "tebak hewan":
-          const randomAnimal =
-            animals[Math.floor(Math.random() * animals.length)];
-          hint = randomAnimal.replace(/[a-z]/gi, "_ "); // Inisialisasi variabel hint di sini
-          store.chatTebeakHewan = {
-            animal: randomAnimal,
-            hint: hint,
-            attempts: 5,
-          };
-          function handleGuess(m, animalName) {
-            if (store.chatTebeakHewan) {
-              const { animal, hint, attempts } = store.chatTebeakHewan;
-              if (animal === animalName) {
-                m.reply(
-                  `Selamat, jawabanmu benar! Hewan yang saya pikirkan adalah ${animal}.`
-                );
-                delete store.chatTebeakHewan;
-              } else {
-                const remainingAttempts = attempts - 1;
-                if (remainingAttempts > 0) {
-                  m.reply(
-                    `Jawabanmu salah. Masih ada ${remainingAttempts} percobaan tersisa. Petunjuk: ${hint}`
-                  );
-                  store.chatTebeakHewan.attempts = remainingAttempts;
-                } else {
-                  m.reply(
-                    `Sayang sekali, kesempatanmu telah habis. Hewan yang saya pikirkan adalah ${animal}.`
-                  );
-                  delete store.chatTebeakHewan;
-                }
-              }
-            } else {
-              m.reply(
-                "Tidak ada permainan tebak hewan yang sedang berlangsung."
-              );
-            }
-          }
-          m.reply(
-            `Selamat Datang Dalam Game Tebak Hewan!\n~Silahkan tebak salah satu hewan dari list dengan contoh command /kucing.\n~Dalam game ini kamu hanya memiliki 5 kesempatan untuk menebak.\n~selamat bermain dan semoga tebakan anda benar!!\n\n#Berikut adalah daftar list hewan yang dapat anda tebak:\n${animals};\nPetunjuk: ${hint}`
-          );
-          break;
-        case "bebek":
-          handleGuess(m, "bebek");
-        case "orangutan":
-          handleGuess(m, "orangutan");
-        case "gorila":
-          handleGuess(m, "gorila");
-        case "elang":
-          handleGuess(m, "elang");
-          break;
-        case "koala":
-          handleGuess(m, "koala");
-          break;
-        case "ikan":
-          handleGuess(m, "ikan");
-          break;
-        case "jerapah":
-          handleGuess(m, "jerapah");
-          break;
-        case "monyet":
-          handleGuess(m, "monyet");
-          break;
-        case "burung":
-          handleGuess(m, "burung");
-          break;
-        case "chetah":
-          handleGuess(m, "chetah");
-          break;
-        case "harimau":
-          handleGuess(m, "harimau");
-          break;
-        case "serigala":
-          handleGuess(m, "serigala");
-          break;
-        case "semut":
-          handleGuess(m, "semut");
-          break;
-        case "ayam":
-          handleGuess(m, "ayam");
-          break;
-        case "kucing":
-          handleGuess(m, "kucing");
-          break;
-        case "anjing":
-          handleGuess(m, "anjing");
-          break;
-        case "singa":
-          handleGuess(m, "singa");
-          break;
-        case "ular":
-          handleGuess(m, "ular");
-          break;
-        case "babi":
-          handleGuess(m, "babi");
-          break;
-        case "gajah":
-          handleGuess(m, "gajah");
-          break;
-        case "kalajengking":
-          if (store.chatTebeakHewan) {
-            const { animal, hint, attempts } = store.chatTebeakHewan;
-            if (animal === "koruptor") {
-              m.reply(
-                `Selamat, jawabanmu benar! Hewan yang saya pikirkan adalah ${animal}.anda berhasil menebak salah satu dari hewan rahasia yang tidak ada di list`
-              );
-              delete store.chatTebeakHewan;
-            } else {
-              const remainingAttempts = attempts - 1;
-              if (remainingAttempts > 0) {
-                m.reply(
-                  `Jawabanmu salah. Masih ada ${remainingAttempts} percobaan tersisa,hewan yang saya pikirkan sekarang ini merupakan hewan rahasia.Petunjuk: ${hint}`
-                );
-                store.chatTebeakHewan.attempts = remainingAttempts;
-              } else {
-                m.reply(
-                  `Sayang sekali, kesempatanmu telah habis. Hewan yang saya pikirkan adalah ${animal}`
-                );
-                delete store.chatTebeakHewan;
-              }
-            }
-          } else {
-            m.reply("Tidak ada permainan tebak hewan yang sedang berlangsung.");
-          }
-          break;
         case "meme":
         case "kasih aku meme dong":
         case "kirim meme":
@@ -1143,73 +1055,10 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
             m.reply("Maaf, sepertinya ada yang error dalam mengirimkan meme.");
           }
           break;
-        case "ai":
-          if (setting.keyopenai === "ISI_APIKEY_OPENAI_DISINI")
-            return reply(
-              "Apikey belum diisi\n\nSilahkan isi terlebih dahulu apikeynya di file key.json\n\nApikeynya bisa dibuat di website: https://beta.openai.com/account/api-keys"
-            );
-          const configuration = new Configuration({
-            apiKey: setting.keyopenai,
-          });
-          const openai = new OpenAIApi(configuration);
-          const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "user",
-                content: `anggap kamu adalah AI bernama vero,kamu dibuat dengan API openAI dan javascript,pembuatmu bernama siddiq.buat percakapan yg menarik,jawab pakai bahasa asik,ramah,friendly 😁. \n ${command}`,
-              },
-            ],
-          });
-          m.reply(`${response.data.choices[0].message.content}`);
-        case "img":
-          try {
-            if (setting.keyopenai === "ISI_APIKEY_OPENAI_DISINI") return reply("Apikey belum diisi\n\nSilahkan isi terlebih dahulu apikeynya di file key.json\n\nApikeynya bisa dibuat di website: https://beta.openai.com/account/api-keys");
-            if (!text) return reply(`Membuat gambar dari AI.\n\nContoh:\n${prefix}${command} Wooden house on snow mountain`);
-            const configuration = new Configuration({
-              apiKey: setting.keyopenai,
-            });
-            const openai = new OpenAIApi(configuration);
-            const response = await openai.createImage({
-              prompt: text,
-              n: 1,
-              size: "512x512",
-            });
-            //console.log(response.data.data[0].url)
-            client.sendImage(from, response.data.data[0].url, text, mek);
-            } catch (error) {
-          if (error.response) {
-            console.log(error.response.status);
-            console.log(error.response.data);
-            console.log(`${error.response.status}\n\n${error.response.data}`);
-          } else {
-            console.log(error);
-            m.reply("Maaf, sepertinya ada yang error :"+ error.message);
-          }
-        }
+        case "tes":
+          m.reply(m.chat);
         default: {
-          // if (isCmd2 && budy.toLowerCase() != undefined) {
-          //   if (m.chat.endsWith("broadcast")) return;
-          //   if (m.isBaileys) return;
-          //   if (!budy.toLowerCase()) return;
-          //   if (argsLog || (isCmd2 && !m.isGroup)) {
-          //     // client.sendReadReceipt(m.chat, m.sender, [m.key.id])
-          //     console.log(
-          //       chalk.black(chalk.bgRed("[ ERROR ]")),
-          //       color("command", "turquoise"),
-          //       color(`${prefix}${command}`, "turquoise"),
-          //       color("tidak tersedia", "turquoise")
-          //     );
-          //   } else if (argsLog || (isCmd2 && m.isGroup)) {
-          //     // client.sendReadReceipt(m.chat, m.sender, [m.key.id])
-          //     console.log(
-          //       chalk.black(chalk.bgRed("[ ERROR ]")),
-          //       color("command", "turquoise"),
-          //       color(`${prefix}${command}`, "turquoise"),
-          //       color("tidak tersedia", "turquoise")
-          //     );
-          //   }
-          // }
+          console.log("perintah dipindahkan ke sansekai 2");
           if (isCmd2 && budy.toLowerCase() != undefined) {
             if (m.chat.endsWith("broadcast")) return;
             if (m.isBaileys) return;
@@ -1218,31 +1067,34 @@ module.exports = sansekai = async (client, m, chatUpdate, store) => {
               try {
                 if (command.includes("remove") && command.includes("tugas")) {
                   m.reply(
-                    "Format perintah yang anda masukkan salah,silahkan periksa ketentuannya dan coba lagi"
+                    "Format perintah yang anda masukkan salah atau tidak tersedia,silahkan periksa ketentuannya di /menu dan coba lagi"
                   );
                 } else if (command.includes("tugas")) {
                   m.reply(
-                    "Format perintah yang anda masukkan salah,silahkan periksa ketentuannya dan coba lagi"
+                    "Format perintah yang anda masukkan salah atau tidak tersedia,silahkan periksa ketentuannya di /menu dan coba lagi"
                   );
-                } else {
-                  if (setting.keyopenai === "ISI_APIKEY_OPENAI_DISINI")
-                    return reply(
-                      "Apikey belum diisi\n\nSilahkan isi terlebih dahulu apikeynya di file key.json\n\nApikeynya bisa dibuat di website: https://beta.openai.com/account/api-keys"
-                    );
-                  const configuration = new Configuration({
-                    apiKey: setting.keyopenai,
-                  });
-                  const openai = new OpenAIApi(configuration);
-                  const response = await openai.createChatCompletion({
-                    model: "gpt-3.5-turbo",
-                    messages: [
-                      {
-                        role: "user",
-                        content: `kamu adalah AI bernama vero,kamu dibuat dengan modul baileys dan API key dari openai.creator yang membuatmu bernama siddiq.buatlah percakapan yg menarik,jawab pakai bahasa asik,ramah,friendly 😁. \n ${command}`,
-                      },
-                    ],
-                  });
-                  m.reply(`${response.data.choices[0].message.content}`);
+                } else if (
+                  commandArray[0] === "ai" &&
+                  commandArray.length > 1
+                ) {
+                  m.reply("Vero sedang berpikir,mohon tunggu sebentar....");
+                } else if (
+                  commandArray[0] === "ai" &&
+                  commandArray.length === 1
+                ) {m.reply("Setelah /ai,ketikkan pertanyaan anda");
+                }else if (
+                  commandArray[0] === "img" &&
+                  commandArray.length > 1
+                ) {
+                  m.reply("Vero sedang memproses gambar yang anda maksud,mohon tunggu sebentar....");
+                } else if (
+                  commandArray[0] === "img" &&
+                  commandArray.length === 1
+                ) {m.reply("Setelah /img,ketikkan gambar yang ingin anda buat dalam bahasa inggris")}
+                 else {
+                  m.reply(
+                    "Format perintah yang anda masukkan salah atau tidak tersedia,silahkan periksa ketentuannya di /menu dan coba lagi"
+                  );
                 }
               } catch (error) {
                 if (error.response) {

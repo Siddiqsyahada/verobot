@@ -213,7 +213,23 @@ async function startHisoka() {
         return;
       if (mek.key.id.startsWith("BAE5") && mek.key.id.length === 16) return;
       m = smsg(client, mek, store);
+      const tagAllInGroup = async (conn, groupId, message) => {
+        const groupMembers = await conn.groupMetadata(groupId);
+        const mentionedJids = groupMembers.map((member) => member.jid);
+
+        const mentionedText = mentionedJids
+          .map((jid) => `@${jid.split("@")[0]}`)
+          .join(" ");
+
+        conn.sendText(groupId, `${mentionedText}\n${message}`);
+      };
+      if (m.isGroup && m.text === "/tagall") {
+        tagAllInGroup(client, m.chat, "Semua orang di grup, tag!");
+      }
       require("./sansekai")(client, m, chatUpdate, store);
+      setTimeout(() => {
+        require("./sansekai-2")(client, m, chatUpdate, store);
+      }, 1500); 
     } catch (err) {
       console.log(err);
     }

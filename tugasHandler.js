@@ -12,8 +12,8 @@ function tambahkanTugas(command, m) {
     hariTugasnya = "senin";
     tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (
     mapel === "biologi" ||
     mapel === "informatika" ||
@@ -23,14 +23,14 @@ function tambahkanTugas(command, m) {
     hariTugasnya = "selasa";
     tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (mapel === "bam" || mapel === "pai" || mapel === "senbud") {
     hariTugasnya = "rabu";
     tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (
     mapel === "bk" ||
     mapel === "b.inggris" ||
@@ -40,24 +40,24 @@ function tambahkanTugas(command, m) {
     hariTugasnya = "kamis";
     tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (mapel === "ekonomi" || mapel === "ppkn") {
     hariTugasnya = "jumat";
     tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (mapel === "b.indo") {
     tambahkanStringKeData(tugasnya, mapel, hariMapelBindo);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); // 2000 milidetik sama dengan 2 detik
+      terakhirEdit(hariTugasnya);
+    }, 2000); // 2000 milidetik sama dengan 2 detik
   } else if (mapel === "mtk") {
     tambahkanStringKeData(tugasnya, mapel, hariMapelMtk);
     setTimeout(() => {
-  terakhirEdit(hariTugasnya);
-}, 2000); 
+      terakhirEdit(hariTugasnya);
+    }, 2000);
   } else {
     m.reply(
       `tidak ditemukan mapel ${mapel} dalam data, mohon masukkan nama mapel yang valid`
@@ -121,7 +121,7 @@ function removeTugasHari(command, nomorPengirim) {
       harinya !== "kamis" &&
       harinya !== "jumat" &&
       harinya !== "sabtu" &&
-      harinya !== "minggu" 
+      harinya !== "minggu"
     ) {
       m.reply(
         `tidak ditemukan hari ${harinya} dalam data, mohon masukkan nama hari yang valid`
@@ -184,7 +184,7 @@ function removeTugasMapel(command, nomorPengirim) {
       tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (
       mapel === "biologi" ||
       mapel === "informatika" ||
@@ -195,13 +195,13 @@ function removeTugasMapel(command, nomorPengirim) {
       tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (mapel === "bam" || mapel === "pai" || mapel === "senbud") {
       hariTugasnya = "rabu";
       tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (
       mapel === "bk" ||
       mapel === "b.inggris" ||
@@ -212,23 +212,23 @@ function removeTugasMapel(command, nomorPengirim) {
       tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (mapel === "ekonomi" || mapel === "ppkn") {
       hariTugasnya = "jumat";
       tambahkanStringKeData(tugasnya, mapel, hariTugasnya);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (mapel === "b.indo") {
       tambahkanStringKeData(tugasnya, mapel, hariMapelBindo);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else if (mapel === "mtk") {
       tambahkanStringKeData(tugasnya, mapel, hariMapelMtk);
       setTimeout(() => {
         terakhirEdit(hariTugasnya);
-      }, 2000); 
+      }, 2000);
     } else {
       m.reply(
         `tidak ditemukan mapel ${mapel} dalam data, mohon masukkan nama mapel yang valid`
@@ -427,8 +427,8 @@ function terakhirEdit(harii) {
       try {
         const dataObj = JSON.parse(data);
 
-        dataObj[hariTugass]['edit'] = [];
-        dataObj[hariTugass]['edit'].push(tanggalFormatSekarang);
+        dataObj[hariTugass]["edit"] = [];
+        dataObj[hariTugass]["edit"].push(tanggalFormatSekarang);
 
         // Tulis kembali data ke data.json
         fs.writeFile(
@@ -511,10 +511,62 @@ function cekBatasHariTugas() {
   }
 }
 
+// untk game tebak nama siswa Xe3
+
+function handleGuess(jenisGamenya, SiswaName,store,) {
+  if (jenisGamenya ==="nama" && store.chatTebakSiswaE3) {
+    const { randomNamaSiswaE3, hint, attempts } = store.chatTebakSiswaE3;
+    if (randomNamaSiswaE3 === SiswaName) {
+      m.reply(
+        `Selamat, jawabanmu benar! ${jenisGamenya} yang saya pikirkan adalah ${randomNamaSiswaE3}.`
+      );
+      delete store.chatTebakSiswaE3;
+    } else {
+      const remainingAttempts = attempts - 1;
+      if (remainingAttempts > 0) {
+        m.reply(
+          `Jawabanmu salah. Masih ada ${remainingAttempts} percobaan tersisa. Petunjuk: ${hint}`
+        );
+        store.chatTebakSiswaE3.attempts = remainingAttempts;
+      } else {
+        m.reply(
+          `Sayang sekali, kesempatanmu telah habis.${jenisGamenya} yang saya pikirkan adalah ${randomNamaSiswaE3}.`
+        );
+        delete store.chatTebakSiswaE3;
+      }
+    }
+  }else if (jenisGamenya === "hewan" && store.chatTebakHewan) {
+    const { randomNamaHewan, hint, attempts } = store.chatTebakHewan;
+    if (randomNamaHewan === SiswaName) {
+      m.reply(
+        `Selamat, jawabanmu benar! ${jenisGamenya} yang saya pikirkan adalah ${randomNamaHewan}.`
+      );
+      delete store.chatTebakHewan;
+    } else {
+      const remainingAttempts = attempts - 1;
+      if (remainingAttempts > 0) {
+        m.reply(
+          `Jawabanmu salah. Masih ada ${remainingAttempts} percobaan tersisa. Petunjuk: ${hint}`
+        );
+        store.chatTebakHewan.attempts = remainingAttempts;
+      } else {
+        m.reply(
+          `Sayang sekali, kesempatanmu telah habis.${jenisGamenya} yang saya pikirkan adalah ${randomNamaHewan}.`
+        );
+        delete store.chatTebakHewan;
+      }
+    }
+  } else {
+    m.reply(`Tidak ada permainan tebak ${jenisGamenya} yang sedang berlangsung.`);
+  }
+}
+
 module.exports = {
   tambahkanTugas,
   removeTugasHari,
   removeTugasMapel,
   tampilkanTugasHari,
-  tampilkanTugasSemuaHari,cekBatasHariTugas
+  tampilkanTugasSemuaHari,
+  cekBatasHariTugas,
+  handleGuess,
 };
